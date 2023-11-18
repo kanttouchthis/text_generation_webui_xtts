@@ -8,7 +8,7 @@ This is a very crude extension i threw together quickly based on the [barktts](h
 Clone this repo:
 ```
 cd extensions
-git clone <this repo>
+git clone https://github.com/kanttouchthis/text-generation-webui-xtts
 ```
 Activate your environment. For example
 ```
