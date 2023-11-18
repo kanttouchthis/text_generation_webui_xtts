@@ -10,11 +10,11 @@ Clone this repo:
 cd extensions
 git clone https://github.com/kanttouchthis/text-generation-webui-xtts
 ```
-Activate your environment. For example
+Activate your environment. For example:
 ```
 conda activate textgen
 ```
-Install dependencies for TTS
+Install dependencies for TTS.
 ```
 pip install -r requirements.txt
 ```
