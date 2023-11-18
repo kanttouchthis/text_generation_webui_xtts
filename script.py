@@ -15,6 +15,13 @@ languages = params["available_languages"]
 voice_presets = sorted(os.listdir(f"{this_dir}/voices"))
 
 
+def preprocess(raw_input):
+    raw_input = raw_input.replace("&amp;", "&")
+    raw_input = raw_input.replace("&lt;", "<")
+    raw_input = raw_input.replace("&gt;", ">")
+    raw_input = raw_input.replace("&quot;", '"')
+    return raw_input
+
 def history_modifier(history):
     if len(history['internal']) > 0:
         history['visible'][-1] = [
@@ -44,7 +51,7 @@ def output_modifier(string):
         print("[XTTS] Loading XTTS...")
         tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=True)
 
-    ttstext = string
+    ttstext = preprocess(string)
     time_label = int(time.time())
     tts.tts_to_file(text=ttstext,
                     file_path=f"{this_dir}/generated/{time_label}.wav",
