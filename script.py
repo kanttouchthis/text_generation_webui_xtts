@@ -1,24 +1,19 @@
 from TTS.api import TTS
 import os
+import json
 import time
 from pathlib import Path
 import gradio as gr
 from modules import shared
 
 streaming_state = shared.args.no_stream
-params = {
-    'activate': True,
-    'autoplay': True,
-    'show_text': True,
-    'voice': 'example.wav',
-    'language': 'English'
-}
 
 tts = None
-
 this_dir = os.path.dirname(os.path.abspath(__file__))
+params = json.load(open(f"{this_dir}/config.json"))
+languages = params["available_languages"]
 voice_presets = sorted(os.listdir(f"{this_dir}/voices"))
-languages = {"English": "en", "Spanish": "es", "French": "fr", "German": "de", "Italian": "it", "Portuguese": "pt", "Polish": "pl", "Turkish": "tr", "Russian": "ru", "Dutch": "nl", "Czech": "cs", "Arabic": "ar", "Chinese": "zh-cn", "Japanese": "ja", "Hungarian": "hu", "Korean": "ko"}
+
 
 def history_modifier(history):
     if len(history['internal']) > 0:
@@ -89,7 +84,7 @@ def ui():
                 voice_presets, label='Voice Preset', value=params['voice'])
             language = gr.Dropdown(
                 languages.keys(), label='Language', value=params['language'])
-    
+
     activate.change(lambda x: params.update({'activate': x}), activate, None)
     autoplay.change(lambda x: params.update({'autoplay': x}), autoplay, None)
     show_text.change(lambda x: params.update({'show_text': x}), show_text, None)
