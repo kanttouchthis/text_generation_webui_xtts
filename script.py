@@ -4,6 +4,8 @@ import json
 import time
 from pathlib import Path
 import gradio as gr
+import soundfile as sf
+import numpy as np
 from modules import shared
 
 streaming_state = shared.args.no_stream
@@ -34,6 +36,13 @@ def preprocess_narrator(raw_input):
     return raw_input, narrated_text
 
 
+def combine(audiofiles):
+    audio = np.array([])
+    for audiofile in audiofiles:
+        audio = np.concatenate((audio, sf.read(audiofile)[0]))
+    return audio
+
+
 def history_modifier(history):
     if len(history["internal"]) > 0:
         history["visible"][-1] = [
@@ -45,10 +54,17 @@ def history_modifier(history):
 
 
 def format_html(audiofiles):
-    # cant autoplay multiple files
-    string = ""
-    for audiofile in audiofiles:
-        string += f'<audio src="{audiofile}" controls style="height: 30px;"></audio>'
+    if params["combine"]:
+        autoplay = "autoplay" if params["autoplay"] else ""
+        combined = combine(audiofiles)
+        time_label = audiofiles[0].split("/")[-1].split("_")[0]
+        sf.write(f"{this_dir}/generated/{time_label}_combined.wav",
+                 combined, 24000)
+        return f'<audio src="file/{this_dir}/generated/{time_label}_combined.wav" controls {autoplay} style="height: 30px;"></audio>'
+    else:
+        string = ""
+        for audiofile in audiofiles:
+            string += f'<audio src="file/{audiofile}" controls style="height: 30px;"></audio>'
     return string
 
 
@@ -79,10 +95,10 @@ def tts_char(string):
                     language=languages[params["language"]])
 
     autoplay = "autoplay" if params["autoplay"] else ""
+
+    string = f'<audio src="file/{this_dir}/generated/{time_label}.wav" controls {autoplay} style="height: 30px;"></audio><br>{ttstext}'
     if params["show_text"]:
-        string = f'<audio src="file/{this_dir}/generated/{time_label}.wav" controls {autoplay} style="height: 30px;"></audio><br>{ttstext}'
-    else:
-        string = f'<audio src="file/{this_dir}/generated/{time_label}.wav" controls {autoplay} style="height: 30px;"></audio>'
+        string += f"<br>{ttstext}"
 
     shared.args.no_stream = streaming_state
     return string
@@ -101,19 +117,19 @@ def tts_narrator(string):
     ttstext, turns = preprocess_narrator(string)
     voices = (params["voice"], params["narrator"])
     audiofiles = []
+    time_label = int(time.time())
     for i, turn in enumerate(turns):
         if turn.strip() == "":
             continue
         voice = voices[i % 2]
         if voice == "Skip":
             continue
-        time_label = int(time.time())
         tts.tts_to_file(text=turn,
                         file_path=f"{this_dir}/generated/{time_label}_{i:03d}.wav",
                         speaker_wav=[f"{this_dir}/voices/{voice}"],
                         language=languages[params["language"]])
         audiofiles.append(
-            f"file/{this_dir}/generated/{time_label}_{i:03d}.wav")
+            f"{this_dir}/generated/{time_label}_{i:03d}.wav")
 
     string = format_html(audiofiles)
     if params["show_text"]:
@@ -147,6 +163,8 @@ def ui():
             autoplay = gr.Checkbox(value=params["autoplay"], label="Autoplay")
             show_text = gr.Checkbox(
                 value=params["show_text"], label="Show text")
+            combine_audio = gr.Checkbox(
+                value=params["combine"], label="Combine audio")
         with gr.Row():
             voice = gr.Dropdown(
                 voice_presets, label="Voice Wav", value=params["voice"])
@@ -159,6 +177,9 @@ def ui():
     autoplay.change(lambda x: params.update({"autoplay": x}), autoplay, None)
     show_text.change(lambda x: params.update(
         {"show_text": x}), show_text, None)
+    combine_audio.change(lambda x: params.update(
+        {"combine": x}), combine_audio, None)
+
     voice.change(lambda x: params.update({"voice": x}), voice, None)
     narrator.change(lambda x: params.update({"narrator": x}), narrator, None)
     language.change(lambda x: params.update({"language": x}), language, None)

@@ -2,6 +2,7 @@
     "activate": true,
     "autoplay": true,
     "show_text": true,
+    "combine": true,
     "voice": "example.wav",
     "narrator": "example.wav",
     "language": "English",
