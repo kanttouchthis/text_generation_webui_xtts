@@ -13,6 +13,7 @@ this_dir = os.path.dirname(os.path.abspath(__file__))
 params = json.load(open(f"{this_dir}/config.json"))
 languages = params["available_languages"]
 voice_presets = sorted(os.listdir(f"{this_dir}/voices"))
+narrator_presets = ["None"] + voice_presets
 
 
 def preprocess(raw_input):
@@ -20,20 +21,39 @@ def preprocess(raw_input):
     raw_input = raw_input.replace("&lt;", "<")
     raw_input = raw_input.replace("&gt;", ">")
     raw_input = raw_input.replace("&quot;", '"')
+    raw_input = raw_input.replace("&#x27;", "'")
+    raw_input = raw_input.strip("\"")
     return raw_input
 
+
+def preprocess_narrator(raw_input):
+    raw_input = preprocess(raw_input)
+    raw_input = raw_input.replace("***", "*")
+    raw_input = raw_input.replace("**", "*")
+    narrated_text = raw_input.split("*")
+    return raw_input, narrated_text
+
+
 def history_modifier(history):
-    if len(history['internal']) > 0:
-        history['visible'][-1] = [
-            history['visible'][-1][0],
-            history['visible'][-1][1].replace(
-                'controls autoplay>', 'controls>')
+    if len(history["internal"]) > 0:
+        history["visible"][-1] = [
+            history["visible"][-1][0],
+            history["visible"][-1][1].replace(
+                "controls autoplay>", "controls>")
         ]
     return history
 
 
+def format_html(audiofiles):
+    # cant autoplay multiple files
+    string = ""
+    for audiofile in audiofiles:
+        string += f'<audio src="{audiofile}" controls style="height: 30px;"></audio>'
+    return string
+
+
 def input_modifier(string):
-    if not params['activate']:
+    if not params["activate"]:
         shared.processing_message = "*Is typing...*"
         return string
     shared.processing_message = "*Is recording a voice message...*"
@@ -41,10 +61,10 @@ def input_modifier(string):
     return string
 
 
-def output_modifier(string):
+def tts_char(string):
     global tts
-    string = string.replace("&#x27;", "'")
-    if not params['activate']:
+    string = string
+    if not params["activate"]:
         return string
 
     if tts is None:
@@ -56,16 +76,55 @@ def output_modifier(string):
     tts.tts_to_file(text=ttstext,
                     file_path=f"{this_dir}/generated/{time_label}.wav",
                     speaker_wav=[f"{this_dir}/voices/{params['voice']}"],
-                    language=languages[params['language']])
+                    language=languages[params["language"]])
 
-    autoplay = 'autoplay' if params['autoplay'] else ''
-    if params['show_text']:
-        string = f'<audio src="file/{this_dir}/generated/{time_label}.wav" controls {autoplay}></audio><br>{ttstext}'
+    autoplay = "autoplay" if params["autoplay"] else ""
+    if params["show_text"]:
+        string = f'<audio src="file/{this_dir}/generated/{time_label}.wav" controls {autoplay} style="height: 30px;"></audio><br>{ttstext}'
     else:
-        string = f'<audio src="file/{this_dir}/generated/{time_label}.wav" controls {autoplay}></audio>'
+        string = f'<audio src="file/{this_dir}/generated/{time_label}.wav" controls {autoplay} style="height: 30px;"></audio>'
 
     shared.args.no_stream = streaming_state
     return string
+
+
+def tts_narrator(string):
+    global tts
+    string = string
+    if not params["activate"]:
+        return string
+
+    if tts is None:
+        print("[XTTS] Loading XTTS...")
+        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=True)
+
+    ttstext, turns = preprocess_narrator(string)
+    voices = (params["voice"], params["narrator"])
+    audiofiles = []
+    for i, turn in enumerate(turns):
+        if turn.strip() == "":
+            continue
+        voice = voices[i % 2]
+        time_label = int(time.time())
+        tts.tts_to_file(text=turn,
+                        file_path=f"{this_dir}/generated/{time_label}_{i:03d}.wav",
+                        speaker_wav=[f"{this_dir}/voices/{voice}"],
+                        language=languages[params["language"]])
+        audiofiles.append(
+            f"file/{this_dir}/generated/{time_label}_{i:03d}.wav")
+
+    string = format_html(audiofiles)
+    if params["show_text"]:
+        string += f"<br>{ttstext}"
+    shared.args.no_stream = streaming_state
+    return string
+
+
+def output_modifier(string):
+    if params["narrator"] == "None":
+        return tts_char(string)
+    else:
+        return tts_narrator(string)
 
 
 def setup():
@@ -82,18 +141,22 @@ def ui():
     with gr.Accordion("XTTS"):
         with gr.Row():
             activate = gr.Checkbox(
-                value=params['activate'], label='Activate TTS')
-            autoplay = gr.Checkbox(value=params['autoplay'], label='Autoplay')
+                value=params["activate"], label="Activate TTS")
+            autoplay = gr.Checkbox(value=params["autoplay"], label="Autoplay")
             show_text = gr.Checkbox(
-                value=params['show_text'], label='Show text')
+                value=params["show_text"], label="Show text")
         with gr.Row():
             voice = gr.Dropdown(
-                voice_presets, label='Voice Preset', value=params['voice'])
+                voice_presets, label="Voice Wav", value=params["voice"])
+            narrator = gr.Dropdown(
+                narrator_presets, label="Narrator Wav", value=params["narrator"])
             language = gr.Dropdown(
-                languages.keys(), label='Language', value=params['language'])
+                languages.keys(), label="Language", value=params["language"])
 
-    activate.change(lambda x: params.update({'activate': x}), activate, None)
-    autoplay.change(lambda x: params.update({'autoplay': x}), autoplay, None)
-    show_text.change(lambda x: params.update({'show_text': x}), show_text, None)
-    voice.change(lambda x: params.update({'voice': x}), voice, None)
-    language.change(lambda x: params.update({'language': x}), language, None)
+    activate.change(lambda x: params.update({"activate": x}), activate, None)
+    autoplay.change(lambda x: params.update({"autoplay": x}), autoplay, None)
+    show_text.change(lambda x: params.update(
+        {"show_text": x}), show_text, None)
+    voice.change(lambda x: params.update({"voice": x}), voice, None)
+    narrator.change(lambda x: params.update({"narrator": x}), narrator, None)
+    language.change(lambda x: params.update({"language": x}), language, None)

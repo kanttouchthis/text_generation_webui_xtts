@@ -3,6 +3,7 @@
     "autoplay": true,
     "show_text": true,
     "voice": "example.wav",
+    "narrator": "example.wav",
     "language": "English",
     "available_languages": {
         "English": "en",
