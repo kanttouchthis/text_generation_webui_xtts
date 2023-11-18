@@ -13,7 +13,7 @@ this_dir = os.path.dirname(os.path.abspath(__file__))
 params = json.load(open(f"{this_dir}/config.json"))
 languages = params["available_languages"]
 voice_presets = sorted(os.listdir(f"{this_dir}/voices"))
-narrator_presets = ["None"] + voice_presets
+narrator_presets = ["None", "Skip"] + voice_presets
 
 
 def preprocess(raw_input):
@@ -105,6 +105,8 @@ def tts_narrator(string):
         if turn.strip() == "":
             continue
         voice = voices[i % 2]
+        if voice == "Skip":
+            continue
         time_label = int(time.time())
         tts.tts_to_file(text=turn,
                         file_path=f"{this_dir}/generated/{time_label}_{i:03d}.wav",
