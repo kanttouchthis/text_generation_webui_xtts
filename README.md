@@ -16,6 +16,7 @@ conda activate textgen
 ```
 Install dependencies for TTS.
 ```
+cd text_generation_webui_xtts
 pip install -r requirements.txt
 ```
 Install TTS. Their version requirements cause issues so we install the dependencies above, without version requirements.
