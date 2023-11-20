@@ -5,14 +5,11 @@ This is a simple extension for [text-generation-webui](https://github.com/oobabo
 This is a very crude extension i threw together quickly based on the [barktts](https://github.com/RandomInternetPreson/text-generation-webui-barktts) extension. It may or may not work. Feel free to improve the code and submit a PR.
 
 # Installation
+Activate your environment by running `cmd_windows.bat`/`cmd_linux.sh`/`cmd_macos.sh`/`cmd_wsl.bat` depending on your platform, or activate your conda environment if you installed it manually.
 Clone this repo:
 ```
 cd extensions
 git clone https://github.com/kanttouchthis/text_generation_webui_xtts
-```
-Activate your environment. For example:
-```
-conda activate textgen
 ```
 Install dependencies for TTS.
 ```
