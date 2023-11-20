@@ -48,7 +48,7 @@ def history_modifier(history):
         history["visible"][-1] = [
             history["visible"][-1][0],
             history["visible"][-1][1].replace(
-                "controls autoplay>", "controls>")
+                'controls autoplay style="height: 30px;">', 'controls style="height: 30px;">')
         ]
     return history
 
