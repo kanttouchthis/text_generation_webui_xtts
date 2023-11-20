@@ -3,6 +3,7 @@
     "autoplay": true,
     "show_text": true,
     "combine": true,
+    "delete": true,
     "voice": "example.wav",
     "narrator": "example.wav",
     "language": "English",

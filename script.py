@@ -1,5 +1,6 @@
 from TTS.api import TTS
 import os
+import shutil
 import json
 import time
 from pathlib import Path
@@ -26,6 +27,10 @@ def preprocess(raw_input):
     raw_input = raw_input.replace("&#x27;", "'")
     raw_input = raw_input.strip("\"")
     return raw_input
+
+
+def delete_old():
+    shutil.rmtree(f"{this_dir}/generated")
 
 
 def preprocess_narrator(raw_input):
@@ -149,6 +154,11 @@ def setup():
     global tts
     print("[XTTS] Loading XTTS...")
     tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=True)
+    print("[XTTS] Done!")
+    if params["delete"]:
+        print("[XTTS] Deleting old generated files...")
+        delete_old()
+        print("[XTTS] Done!")
     print("[XTTS] Creating directories (if they don't exist)...")
     if not Path(f"{this_dir}/generated").exists():
         Path(f"{this_dir}/generated").mkdir(parents=True)
