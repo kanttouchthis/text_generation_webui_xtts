@@ -90,7 +90,7 @@ def tts_char(string):
 
     if tts is None:
         print("[XTTS] Loading XTTS...")
-        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=True)
+        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to("cuda")
 
     ttstext = preprocess(string)
     time_label = int(time.time())
@@ -117,7 +117,7 @@ def tts_narrator(string):
 
     if tts is None:
         print("[XTTS] Loading XTTS...")
-        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=True)
+        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to("cuda")
 
     ttstext, turns = preprocess_narrator(string)
     voices = (params["voice"], params["narrator"])
@@ -153,7 +153,7 @@ def output_modifier(string):
 def setup():
     global tts
     print("[XTTS] Loading XTTS...")
-    tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=True)
+    tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to("cuda")
     print("[XTTS] Done!")
     if params["delete"]:
         print("[XTTS] Deleting old generated files...")
