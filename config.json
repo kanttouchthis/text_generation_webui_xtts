@@ -4,6 +4,8 @@
     "show_text": true,
     "combine": true,
     "delete": true,
+    "cpu_offload": false,
+    "device": "cuda",
     "voice": "example.wav",
     "narrator": "example.wav",
     "language": "English",

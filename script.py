@@ -44,6 +44,29 @@ def preprocess_narrator(raw_input):
     return raw_input, narrated_text
 
 
+def load_model():
+    global tts
+    if tts is None:
+        print("[XTTS] Loading XTTS...")
+        tts = TTS(
+            "tts_models/multilingual/multi-dataset/xtts_v2").to(params["device"])
+        print("[XTTS] Done!")
+    elif params["cpu_offload"]:
+        print(f"[XTTS] Loading to {params['device']}...")
+        tts = tts.to(params["device"])
+        print("[XTTS] Done!")
+    else:
+        print("[XTTS] Already loaded!")
+
+
+def offload_model():
+    global tts
+    if params["cpu_offload"] and not params["device"] == "cpu":
+        print("[XTTS] Offloading to CPU...")
+        tts = tts.to("cpu")
+        print("[XTTS] Done!")
+
+
 def combine(audiofiles):
     audio = np.array([])
     for audiofile in audiofiles:
@@ -86,14 +109,11 @@ def input_modifier(string):
 
 
 def tts_char(string):
+    load_model()
     global tts
     string = string
     if not params["activate"]:
         return string
-
-    if tts is None:
-        print("[XTTS] Loading XTTS...")
-        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to("cuda")
 
     ttstext = preprocess(string)
     time_label = int(time.time())
@@ -109,18 +129,16 @@ def tts_char(string):
         string += f"<br>{ttstext}"
 
     shared.args.no_stream = streaming_state
+    offload_model()
     return string
 
 
 def tts_narrator(string):
+    load_model()
     global tts
     string = string
     if not params["activate"]:
         return string
-
-    if tts is None:
-        print("[XTTS] Loading XTTS...")
-        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to("cuda")
 
     ttstext, turns = preprocess_narrator(string)
     voices = (params["voice"], params["narrator"])
@@ -143,6 +161,7 @@ def tts_narrator(string):
     if params["show_text"]:
         string += f"<br>{ttstext}"
     shared.args.no_stream = streaming_state
+    offload_model()
     return string
 
 
@@ -154,10 +173,6 @@ def output_modifier(string):
 
 
 def setup():
-    global tts
-    print("[XTTS] Loading XTTS...")
-    tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to("cuda")
-    print("[XTTS] Done!")
     if params["delete"]:
         print("[XTTS] Deleting old generated files...")
         delete_old()
