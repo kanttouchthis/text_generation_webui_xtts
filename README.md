@@ -1,6 +1,9 @@
 # XTTSv2 for text-generation-webui
 This is a simple extension for [text-generation-webui](https://github.com/oobabooga/text-generation-webui/) that enables multilingual TTS, with voice cloning using XTTSv2 from [coqui-ai/TTS](https://github.com/coqui-ai/TTS).
 
+# Update
+XTTSv2 is now built into [text-generation-webui](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/coqui_tts) (coqui_tts). I might still update this extension for the Narrator feature, but if you don't care about that, use the official extension.
+
 # Disclaimer
 This is a very crude extension i threw together quickly based on the [barktts](https://github.com/RandomInternetPreson/text-generation-webui-barktts) extension. It may or may not work. Feel free to improve the code and submit a PR.
 
