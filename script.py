@@ -109,11 +109,11 @@ def input_modifier(string):
 
 
 def tts_char(string):
-    load_model()
-    global tts
-    string = string
     if not params["activate"]:
         return string
+    
+    load_model()
+    global tts
 
     ttstext = preprocess(string)
     time_label = int(time.time())
@@ -134,11 +134,11 @@ def tts_char(string):
 
 
 def tts_narrator(string):
-    load_model()
-    global tts
-    string = string
     if not params["activate"]:
         return string
+    
+    load_model()
+    global tts
 
     ttstext, turns = preprocess_narrator(string)
     voices = (params["voice"], params["narrator"])
